@@ -13,82 +13,82 @@
 @IDE:          PyCharm
 
 """
-import glob
-import re
-import time
-import datetime
+import glob  # 导入glob函数库
+import re  # 导入re函数库，用于字符检索
+import time  # 导入time函数库，用于时间显示等
+import datetime  # 导入datetime函数库，用于日期的显示等
 
-import os
-import sys
+import os  # 导入os函数库，用于系统路径打开等
+import sys  # 基本作用同上
 
 if hasattr(sys, 'frozen'):
     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ["PATH"]  # PyQt打包环境变量存在异常，此程序语句用于修复环境变量
 
-from PyQt5.QtCore import Qt, QTimer, QDateTime
+from PyQt5.QtCore import Qt, QTimer, QDateTime  # 导入PyQt5等相关函数，用于GUI的建立与显示
 from PyQt5.QtGui import QIcon, QPalette, QBrush, QPixmap, QFont
 from PyQt5.QtWidgets import QApplication, QDesktopWidget, QAction, QLabel, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, \
     QPushButton, QTableWidget, QAbstractItemView, QGridLayout, QTextEdit, QFileDialog, QMessageBox, QTableWidgetItem, \
     QMdiSubWindow, QMdiArea, QDialog
 from PyQt5.QtWidgets import QMainWindow
 
-import shutil
+import shutil  # 导入shutil函数库，用于文件的复制与移动
 from shutil import copyfile  # 复制一个文件到另一个文件夹下    copyfile(src,dst)
 
-import pandas as pd
+import pandas as pd  # 导入pandas函数库，用于文件数据的读取与分析
 
-global model_list_name_path_photo_readme
+global model_list_name_path_photo_readme  # 声明全局变量
 
 
-class MainWindow(QMainWindow):
-    def __init__(self, parent=None):
+class MainWindow(QMainWindow):  # 建立GUI相关类，继承自QMainWindows
+    def __init__(self, parent=None):  # __init__函数，主界面初始化时执行此函数
         super(MainWindow, self).__init__(parent)  # 初始化界面
 
-        self.designer_xiao = "Xiao"
+        self.designer_xiao = "Xiao"  # 定义变量，设计者
 
-        self.status = self.statusBar()  # 定义状态栏
+        self.status = self.statusBar()  # 定义变量，状态栏
 
-        self.menu = self.menuBar()  # 定义菜单栏
+        self.menu = self.menuBar()  # 定义变量，菜单栏
 
-        self.palette = QPalette()  # 设定界面背景
+        self.palette = QPalette()  # 定义变量，界面背景
 
-        self.size = self.geometry()  # 获取界面尺寸
-        self.screen = QDesktopWidget().screenGeometry()  # 获取屏幕尺寸
+        self.size = self.geometry()  # 定义变量，GUI窗口尺寸大小
+        self.screen = QDesktopWidget().screenGeometry()  # 定义变量，获取显示设备屏幕尺寸
 
-        self.fileMenu = self.menu.addMenu("文件")
-        self.import_action = QAction(QIcon("./source/import.png"), "&导入模型", self)
-        self.refresh_action = QAction(QIcon("./source/refresh.png"), "&刷新列表", self)
-        self.helpMenu = self.menu.addMenu("帮助")
-        self.readme_action = QAction(QIcon("./source/readme.png"), "&使用说明", self)
-        self.designer_action = QAction(QIcon("./source/designer.png"), "&开发者", self)
+        self.fileMenu = self.menu.addMenu("文件")  # 定义变量，菜单栏，文件
+        self.import_action = QAction(QIcon("./source/import.png"), "&导入模型", self)  # 定义变量，菜单栏，导入模型，同步设定图标
+        self.refresh_action = QAction(QIcon("./source/refresh.png"), "&刷新列表", self)  # 定义变量，菜单栏，刷新列表，同步设定图标
+        self.helpMenu = self.menu.addMenu("帮助")  # 定义变量，菜单栏，帮助
+        self.readme_action = QAction(QIcon("./source/readme.png"), "&使用说明", self)  # 定义变量，菜单栏，使用说明，同步设定图标
+        self.designer_action = QAction(QIcon("./source/designer.png"), "&开发者", self)  # 定义变量，菜单栏，开发者，同步设定图标
 
-        self.main_frame = QWidget()
-        self.layout_main_frame = QVBoxLayout()
+        self.main_frame = QWidget()  # 定义变量，中央窗口控件
+        self.layout_main_frame = QVBoxLayout()  # 定义变量，中央窗口布局，垂直布局
 
-        self.label_title = QLabel(self)
-        self.layout_label_title = QHBoxLayout()
+        self.label_title = QLabel(self)  # 定义变量，标题Label
+        self.layout_label_title = QHBoxLayout()  # 定义变量，标题Label的布局，水平布局
 
-        self.label_designer = QLabel(self)
-        self.layout_label_designer = QHBoxLayout()
+        self.label_designer = QLabel(self)  # 定义变量，设计者Label
+        self.layout_label_designer = QHBoxLayout()  # 定义变量，设计者Label的布局，水平布局
 
-        self.label_datetime = QLabel(self)
-        self.layout_label_datetime = QHBoxLayout()
+        self.label_datetime = QLabel(self)  # 定义变量，日期时间Label
+        self.layout_label_datetime = QHBoxLayout()  # 定义变量，日期时间Label的布局，水平布局
 
-        self.show_Time_QTimer = QTimer(self)
+        self.show_Time_QTimer = QTimer(self)  # 定义变量，定时器，日期时间实时显示
 
-        self.layout_label_designer_datetime = QHBoxLayout()
+        self.layout_label_designer_datetime = QHBoxLayout()  # 定义变量，设计者和日期时间的布局，水平布局
 
-        self.line_keyword = QLineEdit()
-        self.layout_line_keyword = QHBoxLayout()
+        self.line_keyword = QLineEdit()  # 定义变量，关键字LineEdit
+        self.layout_line_keyword = QHBoxLayout()  #定义变量，关键字LineEdit布局，水平布局
 
-        self.button_search = QPushButton()
-        self.layout_button_search = QHBoxLayout()
+        self.button_search = QPushButton()  # 定义变量，检索按钮PushButton
+        self.layout_button_search = QHBoxLayout()  # 定义变量，检索按钮PushButton布局，水平布局
 
-        self.layout_label_keyword_search = QHBoxLayout()
+        self.layout_label_keyword_search = QHBoxLayout()  # 定义变量，关键字和检索按钮的布局，水平布局
 
-        self.table_model_list = QTableWidget()
-        self.layout_table_model_list = QHBoxLayout()
+        self.table_model_list = QTableWidget()  # 定义变量，ModelList表格控件
+        self.layout_table_model_list = QHBoxLayout()  # 定义变量，ModelList表格控件布局，水平布局
 
-        self.layout_label_keyword_search_model_list = QVBoxLayout()
+        self.layout_label_keyword_search_model_list = QVBoxLayout()  # 定义变量，关键字和检索按钮及ModelList的布局，垂直布局
 
         self.layout_model_photo = QGridLayout()
 
